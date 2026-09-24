@@ -1,79 +1,88 @@
 /* =========================================
-   I. CONFIGURATION & KHỞI TẠO NÂNG CẤP
+   I. CONFIGURATION & KHỞI TẠO
 ========================================= */
 const CONFIG = {
     recipientName: "Thanh Vy",
     senderName: "Một người bạn luôn ủng hộ cậu",
     musicEnabled: true,
-    letterText: "Có những ngày bận rộn đến mức người ta quên mất việc ngước nhìn lên bầu trời. Nhưng hôm nay là một đêm trăng rằm, và ánh trăng thì luôn nhắc chúng ta nhớ về những điều dịu dàng nhất.<br><br>Mong cậu của hôm nay và những ngày tháng sau này sẽ luôn giữ nụ cười rạng rỡ. Nếu có lúc nào mệt mỏi, hãy nhớ rằng luôn có những người bạn — như mình — sẵn sàng lắng nghe và chia sẻ.<br><br><span class='serif highlight' style='font-size: 1.5rem;'>Chúc Thanh Vy một Trung Thu thật ấm áp, trọn vẹn và hạnh phúc. 🌕</span>"
+    letterText: "Mong cậu của hôm nay và những ngày tháng sau này sẽ luôn giữ nụ cười rạng rỡ. Nếu có lúc nào mệt mỏi, hãy nhớ rằng luôn có những người bạn — như mình — sẵn sàng lắng nghe và chia sẻ.<br><br><span class='serif highlight' style='font-size: 1.5rem;'>Chúc Thanh Vy một Trung Thu thật ấm áp, trọn vẹn và hạnh phúc. 🌕</span>"
 };
 
-// Đổ tên
+// Đổ tên vào HTML
 document.querySelectorAll('.r-name').forEach(el => el.textContent = CONFIG.recipientName);
 document.getElementById('s-name').textContent = CONFIG.senderName;
 
-// Thêm viền sương mù điện ảnh tự động
+// Thêm viền sương mù điện ảnh
 const vignette = document.createElement('div');
 vignette.className = 'vignette';
 document.body.appendChild(vignette);
 
 /* =========================================
-   II. HỆ THỐNG GÕ CHỮ (TYPEWRITER ENGINE)
+   II. HỆ THỐNG GÕ CHỮ THÔNG MINH (ĐÃ FIX LỖI 100%)
 ========================================= */
-// 1. Khóa layout & Lưu trữ chữ ban đầu (Để web không bị sập form khi xóa chữ)
+// Khóa layout trước khi gõ để web không bị giật
 document.querySelectorAll('section').forEach(sec => {
     const texts = sec.querySelectorAll('h1, h2, .story-text, p');
     texts.forEach(txt => {
-        // Bỏ qua các thành phần động
         if (['wish-result', 'gift-message', 'mooncake-detail', 'typewriter-text', 'signature'].includes(txt.id)) return;
-        
-        txt.dataset.original = txt.innerHTML; // Lưu nội dung gốc
-        txt.style.minHeight = txt.offsetHeight + 'px'; // Khóa chiều cao
-        txt.innerHTML = ""; // Xóa trắng để chờ gõ
+        txt.dataset.original = txt.innerHTML;
+        txt.style.minHeight = txt.offsetHeight + 'px';
+        txt.innerHTML = "";
         txt.classList.add('type-ready');
     });
 });
 
-// 2. Hàm gõ chữ thông minh
+// Hàm gõ chữ mới: An toàn, mượt mà, xử lý thẻ HTML hoàn hảo
 function typeHTML(element, htmlString, speed, onComplete) {
     element.innerHTML = "<span class='typing-cursor'>|</span>";
-    let i = 0; let isTag = false; let textBuffer = "";
+    let i = 0;
+    let textBuffer = "";
 
     function type() {
         if (i < htmlString.length) {
-            let char = htmlString.charAt(i);
-            if (char === '<') isTag = true;
-            textBuffer += char;
-            if (char === '>') isTag = false;
+            // Nếu gặp thẻ HTML (ví dụ <br>), gom hết toàn bộ thẻ đó ngay lập tức
+            while (i < htmlString.length && htmlString.charAt(i) === '<') {
+                while (i < htmlString.length && htmlString.charAt(i) !== '>') {
+                    textBuffer += htmlString.charAt(i);
+                    i++;
+                }
+                textBuffer += '>'; // Thêm dấu '>' vào
+                i++;
+            }
 
-            if (!isTag) {
+            // Gõ tiếp ký tự bình thường
+            if (i < htmlString.length) {
+                let char = htmlString.charAt(i);
+                textBuffer += char;
+                i++;
+
                 element.innerHTML = textBuffer + "<span class='typing-cursor'>|</span>";
-                
-                // Tự động cuộn theo chữ nếu gõ sát đáy màn hình (Dành cho bức thư dài)
-                if (i % 25 === 0 && element.id === 'typewriter-text') {
+
+                // Tự động cuộn theo chữ (Chống che khuất)
+                if (element.id === 'typewriter-text' && i % 20 === 0) {
                    const cursorY = element.getBoundingClientRect().bottom + window.scrollY;
                    if (cursorY > window.scrollY + window.innerHeight - 150) {
                        window.scrollBy({ top: 80, behavior: 'smooth' });
                    }
                 }
 
-                // Tốc độ ngẫu nhiên y như người thật
-                let randomSpeed = Math.floor(Math.random() * (speed + 20 - speed + 1)) + speed;
-                if (['.', ',', '!', '?'].includes(char)) randomSpeed += 250; // Dừng lại ở dấu câu
+                // Tốc độ gõ ngẫu nhiên
+                let randomSpeed = Math.floor(Math.random() * 40) + speed;
+                if (['.', ',', '!', '?'].includes(char)) randomSpeed += 300; // Nghỉ ở dấu câu
                 setTimeout(type, randomSpeed);
             } else {
-                type(); // Chạy xuyên qua thẻ HTML
+                element.innerHTML = textBuffer;
+                if (onComplete) setTimeout(onComplete, 800);
             }
-            i++;
         } else {
-            element.innerHTML = textBuffer; // Xóa con trỏ khi gõ xong
-            if (onComplete) setTimeout(onComplete, 800); // Nghỉ 0.8s trước khi gõ dòng tiếp theo
+            element.innerHTML = textBuffer; 
+            if (onComplete) setTimeout(onComplete, 800); 
         }
     }
     type();
 }
 
-// 3. Hàm gõ liên tiếp nhiều dòng
+// Hàm gõ liên tiếp nhiều thẻ <p>
 function typeSequence(elements, index, speed, callback) {
     if (index >= elements.length) {
         if (callback) callback();
@@ -86,7 +95,7 @@ function typeSequence(elements, index, speed, callback) {
     });
 }
 
-// Căn chỉnh cuộn mượt mà
+// Hàm tự động cuộn màn hình
 function autoScrollTo(id) {
     const el = document.getElementById(id);
     const y = el.getBoundingClientRect().top + window.scrollY - 50;
@@ -94,23 +103,20 @@ function autoScrollTo(id) {
 }
 
 /* =========================================
-   III. BẮT ĐẦU THƯỚC PHIM & QUẢN LÝ SCROLL
+   III. BẮT ĐẦU THƯỚC PHIM & OBSERVER
 ========================================= */
 window.addEventListener('load', () => {
     setTimeout(() => {
         document.getElementById('loader').style.opacity = '0';
         setTimeout(() => document.getElementById('loader').style.display = 'none', 1500);
         
-        // Gõ chữ Intro phần đầu tiên sau khi load xong
         const introTexts = document.getElementById('s1-intro').querySelectorAll('.type-ready');
         typeSequence(introTexts, 0, 50, () => {
-            // Hiện nút Bắt đầu
             document.getElementById('btn-start').style.opacity = 1;
         });
     }, 1000);
 });
 
-// Ẩn nút bắt đầu lúc đầu
 document.getElementById('btn-start').style.opacity = 0;
 document.getElementById('btn-start').style.transition = "opacity 1.5s ease";
 
@@ -126,7 +132,6 @@ document.getElementById('btn-start').addEventListener('click', () => {
         bgm.play().then(() => { isMusicPlaying = true; musicControl.textContent = "🔊"; })
         .catch(() => { isMusicPlaying = false; musicControl.textContent = "🔈"; });
     }
-    // Lướt tới phần 2
     autoScrollTo('s2-night');
 });
 
@@ -136,34 +141,33 @@ musicControl.addEventListener('click', () => {
     isMusicPlaying = !isMusicPlaying;
 });
 
-// SCROLL OBSERVER - Điều phối quá trình GÕ -> LƯỚT
+// Lướt đến đâu gõ đến đó
 const observer = new IntersectionObserver((entries, obs) => {
     entries.forEach(entry => {
         if (entry.isIntersecting && !entry.target.dataset.seen) {
-            entry.target.dataset.seen = "true"; // Đánh dấu đã thấy
-            entry.target.classList.add('visible');
+            entry.target.dataset.seen = "true"; 
             
-            // Xử lý các section kể chuyện thông thường
+            // Nếu là các phần văn bản bình thường
             const readyTexts = entry.target.querySelectorAll('.type-ready');
-            if (readyTexts.length > 0) {
+            if (readyTexts.length > 0 && entry.target.id !== 's8-message') {
                 typeSequence(readyTexts, 0, 45, () => {
-                    // KHI GÕ XONG HẾT SECTION NÀY -> CHỜ 2.5 GIÂY -> LƯỚT TIẾP XUỐNG
                     if(entry.target.id === 's2-night') setTimeout(() => autoScrollTo('s3-rabbit'), 2500);
                     if(entry.target.id === 's3-rabbit') setTimeout(() => autoScrollTo('s4-wishes'), 2500);
                     if(entry.target.id === 's4-wishes') setTimeout(() => autoScrollTo('s5-gift'), 3000);
                 });
             }
 
-            // Xử lý riêng phần Bức Thư Cuối (S8)
+            // Nếu là phần bức thư (S8)
             if(entry.target.id === 's8-message') {
-                const title = entry.target.querySelector('.type-ready'); // "Gửi cậu,"
+                const title = entry.target.querySelector('.type-ready'); 
                 typeHTML(title, title.dataset.original, 50, () => {
-                    // Sau khi gõ "Gửi cậu,", gõ tiếp nội dung thư
-                    typeHTML(document.getElementById('typewriter-text'), CONFIG.letterText, 45, () => {
+                    typeHTML(document.getElementById('typewriter-text'), CONFIG.letterText, 40, () => {
                         const sig = document.getElementById('signature');
-                        sig.style.display = 'block'; sig.classList.add('visible');
+                        sig.style.display = 'block'; 
+                        setTimeout(() => sig.classList.add('visible'), 100);
+                        
                         window.scrollBy({ top: 100, behavior: 'smooth' });
-                        // Chờ 8 giây đọc xong thư mới lướt sang Chào Tạm Biệt
+                        // Chờ đọc xong thư mới lướt sang Chào Tạm Biệt
                         setTimeout(() => autoScrollTo('s9-ending'), 8000); 
                     });
                 });
@@ -175,7 +179,7 @@ const observer = new IntersectionObserver((entries, obs) => {
 document.querySelectorAll('section').forEach(el => observer.observe(el));
 
 /* =========================================
-   IV. TƯƠNG TÁC QUÀ, BÁNH, ĐIỀU ƯỚC
+   IV. TƯƠNG TÁC: QUÀ, BÁNH, ĐIỀU ƯỚC
 ========================================= */
 document.getElementById('btn-open-gift').addEventListener('click', function() {
     document.getElementById('gift-box').classList.add('opened');
@@ -212,7 +216,8 @@ document.querySelectorAll('.mooncake-item').forEach(cake => {
 
 document.getElementById('btn-wish').addEventListener('click', function() {
     this.style.display = 'none';
-    // KÍCH HOẠT HOA ĐĂNG BAY LÊN
+    
+    // ĐÈN TRỜI BAY LÊN TRÔNG CỰC ĐẸP
     createLanterns(20); 
     createParticles(window.innerWidth / 2, window.innerHeight / 2, 100, '#F5D76E', true);
     
@@ -231,7 +236,7 @@ document.getElementById('btn-restart').addEventListener('click', () => {
 });
 
 /* =========================================
-   V. NGHỆ THUẬT CANVAS (Sao, Đom Đóm, Đèn Trời)
+   V. NGHỆ THUẬT CANVAS (ĐÃ VIẾT ĐẦY ĐỦ RÕ RÀNG)
 ========================================= */
 const canvas = document.getElementById('sky-canvas');
 const ctx = canvas.getContext('2d');
@@ -247,32 +252,53 @@ window.addEventListener('touchend', () => { mouse.x = null; mouse.y = null; });
 function initCanvas() {
     width = canvas.width = window.innerWidth;
     height = canvas.height = window.innerHeight;
-    stars = []; fireflies = [];
-    for(let i=0; i<150; i++) { stars.push({ x: Math.random() * width, y: Math.random() * height, r: Math.random() * 1.5, alpha: Math.random(), speed: Math.random() * 0.02 }); }
-    for(let i=0; i<30; i++) { fireflies.push({ x: Math.random() * width, y: Math.random() * height, r: Math.random() * 2 + 1, vx: (Math.random()-0.5)*0.5, vy: (Math.random()-0.5)*0.5 }); }
+    stars = []; fireflies = []; lanterns = [];
+    
+    for(let i=0; i<150; i++) { 
+        stars.push({ 
+            x: Math.random() * width, 
+            y: Math.random() * height, 
+            r: Math.random() * 1.5, 
+            alpha: Math.random(), 
+            speed: Math.random() * 0.02 
+        }); 
+    }
+    for(let i=0; i<30; i++) { 
+        fireflies.push({ 
+            x: Math.random() * width, 
+            y: Math.random() * height, 
+            r: Math.random() * 2 + 1, 
+            vx: (Math.random()-0.5)*0.5, 
+            vy: (Math.random()-0.5)*0.5 
+        }); 
+    }
 }
 
 function createParticles(x, y, amount, color, isExplosion = false) {
     for(let i=0; i<amount; i++) {
         particles.push({
-            x: x, y: y,
-            vx: (Math.random() - 0.5) * (isExplosion ? 12 : 4), vy: (Math.random() - 0.5) * (isExplosion ? 12 : 4) - (isExplosion ? 2 : 0),
-            r: Math.random() * 3 + 1, color: color, alpha: 1, decay: Math.random() * 0.015 + 0.005
+            x: x, 
+            y: y,
+            vx: (Math.random() - 0.5) * (isExplosion ? 12 : 4), 
+            vy: (Math.random() - 0.5) * (isExplosion ? 12 : 4) - (isExplosion ? 2 : 0),
+            r: Math.random() * 3 + 1, 
+            color: color, 
+            alpha: 1, 
+            decay: Math.random() * 0.015 + 0.005
         });
     }
 }
 
-// HÀM TẠO ĐÈN TRỜI (HOA ĐĂNG)
 function createLanterns(amount) {
     for(let i=0; i<amount; i++) {
         lanterns.push({
             x: Math.random() * width,
-            y: height + Math.random() * 300, // Bắt đầu từ dưới đáy màn hình
+            y: height + Math.random() * 300, 
             vx: (Math.random() - 0.5) * 1,
-            vy: -(Math.random() * 1.5 + 1), // Trôi ngược lên trên
+            vy: -(Math.random() * 1.5 + 1), 
             size: Math.random() * 10 + 8,
             alpha: 0,
-            wobble: Math.random() * Math.PI * 2 // Hiệu ứng lắc lư
+            wobble: Math.random() * Math.PI * 2 
         });
     }
 }
@@ -280,57 +306,89 @@ function createLanterns(amount) {
 function animateCanvas() {
     ctx.clearRect(0, 0, width, height);
     
-    // Sao nền
+    // Render Sao
     stars.forEach(s => {
-        s.alpha += s.speed; if(s.alpha > 1 || s.alpha < 0.2) s.speed *= -1;
-        ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI*2);
-        ctx.fillStyle = `rgba(255, 255, 255, ${s.alpha})`; ctx.fill();
+        s.alpha += s.speed; 
+        if(s.alpha > 1 || s.alpha < 0.2) s.speed *= -1;
+        ctx.beginPath(); 
+        ctx.arc(s.x, s.y, s.r, 0, Math.PI*2);
+        ctx.fillStyle = `rgba(255, 255, 255, ${s.alpha})`; 
+        ctx.fill();
     });
 
-    // Đom đóm né tay
+    // Render Đom đóm
     fireflies.forEach(f => {
-        f.x += f.vx; f.y += f.vy;
-        if(f.x < 0 || f.x > width) f.vx *= -1; if(f.y < 0 || f.y > height) f.vy *= -1;
+        f.x += f.vx; 
+        f.y += f.vy;
+        if(f.x < 0 || f.x > width) f.vx *= -1; 
+        if(f.y < 0 || f.y > height) f.vy *= -1;
+        
         if(mouse.x != null && mouse.y != null) {
-            let dx = mouse.x - f.x; let dy = mouse.y - f.y; let dist = Math.sqrt(dx*dx + dy*dy);
+            let dx = mouse.x - f.x; 
+            let dy = mouse.y - f.y; 
+            let dist = Math.sqrt(dx*dx + dy*dy);
             if(dist < 100) { f.x -= dx * 0.05; f.y -= dy * 0.05; }
         }
-        ctx.beginPath(); ctx.arc(f.x, f.y, f.r, 0, Math.PI*2);
-        ctx.fillStyle = 'rgba(245, 215, 110, 0.6)'; ctx.shadowBlur = 10; ctx.shadowColor = '#F5D76E'; ctx.fill(); ctx.shadowBlur = 0;
+        
+        ctx.beginPath(); 
+        ctx.arc(f.x, f.y, f.r, 0, Math.PI*2);
+        ctx.fillStyle = 'rgba(245, 215, 110, 0.6)'; 
+        ctx.shadowBlur = 10; 
+        ctx.shadowColor = '#F5D76E'; 
+        ctx.fill(); 
+        ctx.shadowBlur = 0;
     });
 
-    // Hạt sáng nổ
+    // Render Particles nổ
     for(let i = particles.length - 1; i >= 0; i--) {
         let p = particles[i];
-        p.x += p.vx; p.y += p.vy; p.alpha -= p.decay;
-        if(p.alpha <= 0) { particles.splice(i, 1); continue; }
-        ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
-        ctx.fillStyle = p.color; ctx.globalAlpha = p.alpha; ctx.fill(); ctx.globalAlpha = 1;
+        p.x += p.vx; 
+        p.y += p.vy; 
+        p.alpha -= p.decay;
+        
+        if(p.alpha <= 0) { 
+            particles.splice(i, 1); 
+            continue; 
+        }
+        
+        ctx.beginPath(); 
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+        ctx.fillStyle = p.color; 
+        ctx.globalAlpha = p.alpha; 
+        ctx.fill(); 
+        ctx.globalAlpha = 1;
     }
 
-    // HOA ĐĂNG BAY LÊN
+    // Render Hoa Đăng bay lên
     for(let i = lanterns.length - 1; i >= 0; i--) {
         let l = lanterns[i];
-        l.x += Math.sin(l.wobble) * 0.5 + l.vx; // Lắc lư qua lại
-        l.wobble += 0.02;
+        l.x += Math.sin(l.wobble) * 0.5 + l.vx; 
+        l.wobble += 0.02; 
         l.y += l.vy;
-        if(l.alpha < 1) l.alpha += 0.01; // Hiện rõ dần
+        
+        if(l.alpha < 1) l.alpha += 0.01; 
         
         ctx.save();
         ctx.globalAlpha = l.alpha;
         ctx.translate(l.x, l.y);
-        ctx.shadowBlur = 20; ctx.shadowColor = '#FF5722';
+        ctx.shadowBlur = 20; 
+        ctx.shadowColor = '#FF5722';
+        
         // Thân đèn
         ctx.fillStyle = '#E64A19';
-        ctx.beginPath(); ctx.roundRect(-l.size/2, -l.size, l.size, l.size*1.5, l.size/4); ctx.fill();
+        ctx.beginPath(); 
+        ctx.roundRect(-l.size/2, -l.size, l.size, l.size*1.5, l.size/4); 
+        ctx.fill();
+        
         // Nắp & Đáy đèn
         ctx.fillStyle = '#F5D76E';
         ctx.fillRect(-l.size/3, -l.size - l.size/5, l.size/1.5, l.size/5);
         ctx.fillRect(-l.size/3, l.size/2, l.size/1.5, l.size/5);
         ctx.restore();
     }
-
     requestAnimationFrame(animateCanvas);
 }
+
 window.addEventListener('resize', initCanvas);
-initCanvas(); animateCanvas();
+initCanvas(); 
+animateCanvas();
