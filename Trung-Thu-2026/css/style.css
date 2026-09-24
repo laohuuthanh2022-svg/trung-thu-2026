@@ -22,6 +22,20 @@ body.locked { overflow: hidden; }
 .highlight { color: var(--text-accent); }
 .mt-2 { margin-top: 2rem; }
 
+/* NÂNG CẤP: Sương mù điện ảnh (Vignette) */
+.vignette {
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+    background: radial-gradient(circle at center, transparent 30%, rgba(4, 7, 16, 0.95) 100%);
+    z-index: 1; pointer-events: none;
+}
+
+/* Con trỏ nhấp nháy khi gõ chữ */
+.typing-cursor {
+    font-weight: bold; color: var(--text-accent);
+    animation: blink 1s step-end infinite;
+}
+@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
 /* LOADING SCREEN */
 #loader {
     position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
@@ -34,31 +48,17 @@ body.locked { overflow: hidden; }
     border-radius: 50%; box-shadow: 0 0 20px var(--moon-glow);
     animation: loaderPulse 1.5s infinite alternate; margin-bottom: 20px;
 }
-@keyframes loaderPulse {
-    0% { transform: scale(0.9); opacity: 0.7; }
-    100% { transform: scale(1.1); opacity: 1; }
-}
+@keyframes loaderPulse { 0% { transform: scale(0.9); opacity: 0.7; } 100% { transform: scale(1.1); opacity: 1; } }
 
-/* HỆ THỐNG BACKGROUND & CANVAS */
-#sky-canvas {
-    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-    z-index: 0; pointer-events: none;
-}
-.ambient-bg {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: linear-gradient(180deg, var(--bg-dark) 0%, var(--bg-light) 100%);
-    z-index: -2;
-}
+/* BACKGROUND & CANVAS */
+#sky-canvas { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 0; pointer-events: none; }
+.ambient-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(180deg, var(--bg-dark) 0%, var(--bg-light) 100%); z-index: -2; }
 
 /* PARALLAX CLOUDS */
-.parallax-cloud {
-    position: fixed; background: rgba(255, 255, 255, 0.03);
-    border-radius: 100px; filter: blur(10px); z-index: -1;
-}
+.parallax-cloud { position: fixed; background: rgba(255, 255, 255, 0.03); border-radius: 100px; filter: blur(10px); z-index: -1; }
 .cloud-1 { width: 300px; height: 50px; top: 20%; left: -100px; animation: drift 40s linear infinite; }
 .cloud-2 { width: 400px; height: 60px; top: 60%; right: -150px; animation: driftReverse 50s linear infinite; }
 .cloud-3 { width: 250px; height: 40px; top: 80%; left: 10%; animation: drift 35s linear infinite; }
-
 @keyframes drift { 0% { transform: translateX(0); } 100% { transform: translateX(100vw); } }
 @keyframes driftReverse { 0% { transform: translateX(0); } 100% { transform: translateX(-100vw); } }
 
@@ -79,28 +79,23 @@ body.locked { overflow: hidden; }
 .btn:hover { background: var(--moon-color); color: var(--bg-dark); box-shadow: 0 0 15px var(--moon-glow); }
 
 /* SECTIONS */
-section {
-    position: relative; width: 100%; min-height: 100vh;
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    z-index: 10; padding: 2rem; text-align: center;
-}
+section { position: relative; width: 100%; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 10; padding: 2rem; text-align: center; }
 .content-box { max-width: 600px; width: 100%; }
 
 /* ANIMATIONS */
 .fade-in { opacity: 0; transform: translateY(30px); transition: opacity 1.5s ease, transform 1.5s ease; }
 .fade-in.visible { opacity: 1; transform: translateY(0); }
-.stagger-text p { opacity: 0; transform: translateY(20px); transition: opacity 1s ease, transform 1s ease; }
-.stagger-text.visible p { opacity: 1; transform: translateY(0); }
 
 /* SPECIFIC ELEMENTS */
+/* NÂNG CẤP: Mặt trăng Hào quang 3 lớp */
 .moon {
     width: 150px; height: 150px; background: var(--moon-color); border-radius: 50%;
-    box-shadow: 0 0 60px var(--moon-glow), 0 0 120px var(--moon-glow);
+    box-shadow: 0 0 40px var(--moon-glow), 0 0 100px var(--moon-glow), 0 0 150px rgba(245, 215, 110, 0.2);
     margin: 0 auto 2rem auto; animation: pulse 4s infinite alternate;
 }
 @keyframes pulse {
-    0% { box-shadow: 0 0 60px var(--moon-glow), 0 0 120px var(--moon-glow); }
-    100% { box-shadow: 0 0 80px var(--moon-glow), 0 0 150px rgba(245, 215, 110, 0.6); }
+    0% { box-shadow: 0 0 40px var(--moon-glow), 0 0 100px var(--moon-glow), 0 0 150px rgba(245, 215, 110, 0.2); }
+    100% { box-shadow: 0 0 60px var(--moon-glow), 0 0 120px var(--moon-glow), 0 0 200px rgba(245, 215, 110, 0.4); }
 }
 
 h1 { font-size: 2.5rem; letter-spacing: 5px; margin-bottom: 1rem; color: var(--text-accent); }
@@ -116,11 +111,7 @@ h1 { font-size: 2.5rem; letter-spacing: 5px; margin-bottom: 1rem; color: var(--t
 .gift-svg { width: 100%; height: 100%; transition: transform 0.5s ease; }
 .gift-lid { transform-origin: bottom right; transition: transform 1s cubic-bezier(0.25, 1, 0.5, 1); }
 .gift-container.opened .gift-lid { transform: translateY(-40px) rotate(15deg); opacity: 0; }
-.gift-glow {
-    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-    width: 10px; height: 10px; background: var(--moon-color); border-radius: 50%;
-    box-shadow: 0 0 50px 20px var(--moon-color); opacity: 0; transition: all 1s ease;
-}
+.gift-glow { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 10px; height: 10px; background: var(--moon-color); border-radius: 50%; box-shadow: 0 0 50px 20px var(--moon-color); opacity: 0; transition: all 1s ease; }
 .gift-container.opened .gift-glow { opacity: 1; transform: translate(-50%, -50%) scale(5); }
 
 /* Mooncakes */
@@ -132,17 +123,14 @@ h1 { font-size: 2.5rem; letter-spacing: 5px; margin-bottom: 1rem; color: var(--t
 .mooncake-name { font-family: 'Cormorant Garamond', serif; font-size: 1.2rem; color: var(--text-accent); letter-spacing: 1px; }
 
 /* Final Message */
-.final-message { text-align: left; background: rgba(255, 255, 255, 0.03); padding: 2.5rem; border-radius: 15px; border: 1px solid rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); }
+.final-message { text-align: left; background: rgba(255, 255, 255, 0.03); padding: 2.5rem; border-radius: 15px; border: 1px solid rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); height: auto; padding-bottom: 3rem; }
 .final-message p { margin-bottom: 1rem; line-height: 1.8; font-size: 1.1rem; }
 .signature { text-align: right; font-style: italic; color: var(--text-accent); margin-top: 2rem; }
 .bg-city { position: absolute; bottom: 0; width: 100%; height: 200px; opacity: 0.3; pointer-events: none; z-index: -1; }
-
 #typewriter-text { font-size: 1.1rem; line-height: 1.8; }
 
 @media (max-width: 768px) {
-    h1 { font-size: 2rem; }
-    .story-text { font-size: 1.2rem; }
-    .final-message { padding: 1.5rem; }
-    .mooncakes-grid { gap: 1rem; }
-    .mooncake-svg { width: 60px; height: 60px; }
+    h1 { font-size: 2rem; } .story-text { font-size: 1.2rem; }
+    .final-message { padding: 1.5rem; padding-bottom: 3rem; }
+    .mooncakes-grid { gap: 1rem; } .mooncake-svg { width: 60px; height: 60px; }
 }
