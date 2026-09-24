@@ -1,26 +1,24 @@
 /* =========================================
-   I. CONFIGURATION
+   I. CONFIGURATION (CẤU HÌNH BỨC THƯ MỚI)
 ========================================= */
 const CONFIG = {
     recipientName: "Cậu",
-    senderName: "Một người bạn vẫn luôn chúc cậu những điều tốt đẹp",
+    senderName: "Một người bạn luôn ủng hộ cậu",
     musicEnabled: true,
-    letterText: "Trung Thu vui vẻ nhé.<br><br>Không cần phải là một người đặc biệt theo cách nào đó mới có thể gửi cho nhau một lời chúc. Chỉ đơn giản là mình vẫn trân trọng việc chúng ta có thể trở thành bạn của nhau sau tất cả.<br><br>Mong cậu luôn vui, luôn bình an và gặp được thật nhiều điều tốt đẹp.<br><br><span class='serif highlight' style='font-size: 1.5rem;'>Chúc cậu một mùa Trung Thu thật vui. 🌕</span>"
+    // Bức thư đã được viết lại dài hơn, sâu sắc và trưởng thành hơn
+    letterText: "Có những ngày bận rộn đến mức người ta quên mất việc ngước nhìn lên bầu trời. Nhưng hôm nay là một đêm trăng rằm, và ánh trăng thì luôn nhắc chúng ta nhớ về những điều dịu dàng nhất.<br><br>Mong cậu của hôm nay và những ngày tháng sau này sẽ luôn giữ nụ cười rạng rỡ . Nếu có lúc nào mệt mỏi, hãy nhớ rằng luôn có những người bạn — như mình — sẵn sàng lắng nghe và chia sẻ.<br><br><span class='serif highlight' style='font-size: 1.5rem;'>Chúc cậu một Trung Thu thật ấm áp, trọn vẹn và hạnh phúc. 🌕</span>"
 };
 
-// Đổ dữ liệu Config vào HTML
 document.querySelectorAll('.r-name').forEach(el => el.textContent = CONFIG.recipientName);
 document.getElementById('s-name').textContent = CONFIG.senderName;
 
 /* =========================================
-   II. LOADER & BẮT ĐẦU
+   II. LOADER & BẮT ĐẦU (TỰ ĐỘNG CHẠY THƯỚC PHIM)
 ========================================= */
 window.addEventListener('load', () => {
     setTimeout(() => {
         document.getElementById('loader').style.opacity = '0';
-        setTimeout(() => {
-            document.getElementById('loader').style.display = 'none';
-        }, 1500);
+        setTimeout(() => document.getElementById('loader').style.display = 'none', 1500);
     }, 1000);
 });
 
@@ -28,12 +26,19 @@ const bgm = document.getElementById('bgm');
 const musicControl = document.getElementById('music-control');
 let isMusicPlaying = false;
 
+// Hàm tự động cuộn mượt mà
+function autoScrollTo(id, delay) {
+    setTimeout(() => {
+        document.getElementById(id).scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, delay);
+}
+
 document.getElementById('btn-start').addEventListener('click', () => {
     document.body.classList.remove('locked');
     
     if (CONFIG.musicEnabled) {
         musicControl.style.opacity = "1";
-        bgm.volume = 0.5; // Âm lượng vừa phải
+        bgm.volume = 0.5;
         bgm.play().then(() => {
             isMusicPlaying = true;
             musicControl.textContent = "🔊";
@@ -42,7 +47,19 @@ document.getElementById('btn-start').addEventListener('click', () => {
             musicControl.textContent = "🔈";
         });
     }
-    document.getElementById('s2-night').scrollIntoView({ behavior: 'smooth' });
+
+    // BẮT ĐẦU CHUỖI TỰ ĐỘNG LƯỚT (CINEMATIC TIMELINE)
+    // 1. Lướt xuống màn đêm
+    autoScrollTo('s2-night', 500);
+    
+    // 2. Lướt xuống thỏ ngọc sau 9.5 giây
+    autoScrollTo('s3-rabbit', 9500);
+    
+    // 3. Lướt xuống lời chúc sau 18 giây
+    autoScrollTo('s4-wishes', 18000);
+    
+    // 4. Lướt xuống Hộp quà sau 27 giây (Dừng lại đợi người dùng bấm)
+    autoScrollTo('s5-gift', 27000);
 });
 
 musicControl.addEventListener('click', () => {
@@ -52,27 +69,26 @@ musicControl.addEventListener('click', () => {
 });
 
 /* =========================================
-   III. SCROLL OBSERVER & TYPEWRITER
+   III. SCROLL OBSERVER & TYPEWRITER (HIỆN CHỮ TỪ TỪ)
 ========================================= */
 const observer = new IntersectionObserver((entries, obs) => {
     entries.forEach(entry => {
         if (entry.isIntersecting) {
             entry.target.classList.add('visible');
             
-            // Stagger text (hiện từng câu)
+            // Hiện chữ từng dòng chậm rãi
             if(entry.target.classList.contains('stagger-text')) {
                 const paras = entry.target.querySelectorAll('p');
                 paras.forEach((p, index) => {
-                    setTimeout(() => { p.style.opacity = '1'; p.style.transform = 'translateY(0)'; }, index * 800);
+                    setTimeout(() => { p.style.opacity = '1'; p.style.transform = 'translateY(0)'; }, index * 1200); // 1.2s mỗi dòng
                 });
             }
             
-            // Trigger Typewriter cho Section 8
+            // Đánh chữ từ từ cho lá thư cuối
             if(entry.target.classList.contains('final-message') && !entry.target.dataset.typed) {
                 entry.target.dataset.typed = "true";
-                typeWriterEffect(CONFIG.letterText, document.getElementById('typewriter-text'), 50);
+                typeWriterEffect(CONFIG.letterText, document.getElementById('typewriter-text'), 40);
             }
-
             obs.unobserve(entry.target);
         }
     });
@@ -80,7 +96,6 @@ const observer = new IntersectionObserver((entries, obs) => {
 
 document.querySelectorAll('.fade-in, .stagger-text').forEach(el => observer.observe(el));
 
-// Hàm đánh chữ (hỗ trợ HTML tags)
 function typeWriterEffect(text, element, speed) {
     element.innerHTML = "";
     let i = 0;
@@ -91,7 +106,6 @@ function typeWriterEffect(text, element, speed) {
         if (i < text.length) {
             let char = text.charAt(i);
             if (char === '<') isTag = true;
-            
             textBuffer += char;
             if (char === '>') isTag = false;
             
@@ -99,19 +113,23 @@ function typeWriterEffect(text, element, speed) {
                 element.innerHTML = textBuffer;
                 setTimeout(type, speed);
             } else {
-                type(); // Chạy nhanh qua HTML tags
+                type();
             }
             i++;
         } else {
-            document.getElementById('signature').style.display = 'block';
-            document.getElementById('signature').classList.add('visible');
+            setTimeout(() => {
+                document.getElementById('signature').style.display = 'block';
+                document.getElementById('signature').classList.add('visible');
+                // Chờ đọc xong thư rồi tự cuộn xuống Ending
+                autoScrollTo('s9-ending', 6000); 
+            }, 1000);
         }
     }
-    setTimeout(type, 1000); // Đợi 1s sau khi scroll tới mới bắt đầu gõ
+    setTimeout(type, 1500); 
 }
 
 /* =========================================
-   IV. INTERACTIVE LOGIC (Gift, Mooncakes, Wish)
+   IV. INTERACTIVE LOGIC (QUÀ & BÁNH & ĐIỀU ƯỚC)
 ========================================= */
 document.getElementById('btn-open-gift').addEventListener('click', function() {
     document.getElementById('gift-box').classList.add('opened');
@@ -121,6 +139,9 @@ document.getElementById('btn-open-gift').addEventListener('click', function() {
         const msg = document.getElementById('gift-message');
         msg.innerHTML = "Quà không có gì to tát đâu.<br><br><span class='highlight'>Chỉ là một lời chúc được gói lại cho đẹp thôi.</span>";
         msg.style.opacity = 1;
+        
+        // Tự cuộn xuống phần bánh sau khi xem quà 4s
+        autoScrollTo('s6-mooncakes', 4000);
     }, 1500);
 });
 
@@ -140,22 +161,30 @@ document.querySelectorAll('.mooncake-item').forEach(cake => {
         setTimeout(() => {
             detail.innerHTML = messages[cake.getAttribute('data-id')];
             detail.style.opacity = 1;
+            
+            // Tự cuộn xuống phần điều ước sau khi xem bánh 5s
+            autoScrollTo('s7-wish', 5000);
         }, 300);
     });
 });
 
 document.getElementById('btn-wish').addEventListener('click', function() {
     this.style.display = 'none';
-    createParticles(window.innerWidth / 2, window.innerHeight / 2, 100, '#F5D76E', true);
-    setTimeout(() => { document.getElementById('wish-result').style.opacity = 1; }, 2500);
+    createParticles(window.innerWidth / 2, window.innerHeight / 2, 150, '#F5D76E', true);
+    setTimeout(() => { 
+        document.getElementById('wish-result').style.opacity = 1; 
+        // Tự cuộn xuống bức thư sau khi ước 4s
+        autoScrollTo('s8-message', 4000);
+    }, 2500);
 });
 
 document.getElementById('btn-restart').addEventListener('click', () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
+    setTimeout(() => location.reload(), 800); // Reload lại để reset chuỗi tự động
 });
 
 /* =========================================
-   V. CANVAS ADVANCED (Sao & Đom Đóm tương tác)
+   V. CANVAS ADVANCED (Sao & Đom Đóm)
 ========================================= */
 const canvas = document.getElementById('sky-canvas');
 const ctx = canvas.getContext('2d');
@@ -163,7 +192,6 @@ let width, height;
 let stars = [], particles = [], fireflies = [];
 let mouse = { x: null, y: null };
 
-// Theo dõi con trỏ / ngón tay
 window.addEventListener('mousemove', e => { mouse.x = e.x; mouse.y = e.y; });
 window.addEventListener('touchmove', e => { mouse.x = e.touches[0].clientX; mouse.y = e.touches[0].clientY; });
 window.addEventListener('mouseout', () => { mouse.x = null; mouse.y = null; });
@@ -173,20 +201,11 @@ function initCanvas() {
     width = canvas.width = window.innerWidth;
     height = canvas.height = window.innerHeight;
     stars = []; fireflies = [];
-    
-    // Sao nền
     for(let i=0; i<150; i++) {
-        stars.push({
-            x: Math.random() * width, y: Math.random() * height,
-            r: Math.random() * 1.5, alpha: Math.random(), speed: Math.random() * 0.02
-        });
+        stars.push({ x: Math.random() * width, y: Math.random() * height, r: Math.random() * 1.5, alpha: Math.random(), speed: Math.random() * 0.02 });
     }
-    // Đom đóm (Ambient particles)
     for(let i=0; i<30; i++) {
-        fireflies.push({
-            x: Math.random() * width, y: Math.random() * height,
-            r: Math.random() * 2 + 1, vx: (Math.random()-0.5)*0.5, vy: (Math.random()-0.5)*0.5
-        });
+        fireflies.push({ x: Math.random() * width, y: Math.random() * height, r: Math.random() * 2 + 1, vx: (Math.random()-0.5)*0.5, vy: (Math.random()-0.5)*0.5 });
     }
 }
 
@@ -203,8 +222,6 @@ function createParticles(x, y, amount, color, isExplosion = false) {
 
 function animateCanvas() {
     ctx.clearRect(0, 0, width, height);
-    
-    // Sao lấp lánh
     stars.forEach(s => {
         s.alpha += s.speed;
         if(s.alpha > 1 || s.alpha < 0.2) s.speed *= -1;
@@ -212,29 +229,19 @@ function animateCanvas() {
         ctx.fillStyle = `rgba(255, 255, 255, ${s.alpha})`; ctx.fill();
     });
 
-    // Đom đóm (né chuột)
     fireflies.forEach(f => {
         f.x += f.vx; f.y += f.vy;
         if(f.x < 0 || f.x > width) f.vx *= -1;
         if(f.y < 0 || f.y > height) f.vy *= -1;
-
-        // Interaction
         if(mouse.x != null && mouse.y != null) {
-            let dx = mouse.x - f.x;
-            let dy = mouse.y - f.y;
-            let dist = Math.sqrt(dx*dx + dy*dy);
-            if(dist < 100) { // Nếu con trỏ lại gần, đom đóm dạt ra
-                f.x -= dx * 0.05;
-                f.y -= dy * 0.05;
-            }
+            let dx = mouse.x - f.x; let dy = mouse.y - f.y; let dist = Math.sqrt(dx*dx + dy*dy);
+            if(dist < 100) { f.x -= dx * 0.05; f.y -= dy * 0.05; }
         }
         ctx.beginPath(); ctx.arc(f.x, f.y, f.r, 0, Math.PI*2);
         ctx.fillStyle = 'rgba(245, 215, 110, 0.6)';
-        ctx.shadowBlur = 10; ctx.shadowColor = '#F5D76E';
-        ctx.fill(); ctx.shadowBlur = 0; // Reset
+        ctx.shadowBlur = 10; ctx.shadowColor = '#F5D76E'; ctx.fill(); ctx.shadowBlur = 0;
     });
 
-    // Particles nổ
     for(let i = particles.length - 1; i >= 0; i--) {
         let p = particles[i];
         p.x += p.vx; p.y += p.vy; p.alpha -= p.decay;
@@ -244,6 +251,5 @@ function animateCanvas() {
     }
     requestAnimationFrame(animateCanvas);
 }
-
 window.addEventListener('resize', initCanvas);
 initCanvas(); animateCanvas();
